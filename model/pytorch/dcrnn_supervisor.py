@@ -46,7 +46,7 @@ class DCRNNSupervisor:
         self.dcrnn_model = dcrnn_model.to(device)
         self._logger.info("Model created")
 
-        wandb.init(name='dcrnn')
+        wandb.init(project='epigcn',name='dcrnn')
 
         self._epoch_num = self._train_kwargs.get('epoch', 0)
         if self._epoch_num > 0:
