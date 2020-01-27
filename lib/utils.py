@@ -188,8 +188,8 @@ def load_dataset(dataset_dir, batch_size, test_batch_size=None, **kwargs):
     # scaler = StandardScaler(mean=data['x_train'][..., 0].mean(), std=data['x_train'][..., 0].std())
     # Data format
     for category in ['train', 'val', 'test']:
-        data['x_' + category] = np.swapaxes(data['x_' + category], 0, 1)
-        data['y_' + category] = np.swapaxes(data['y_' + category], 0, 1)  # swap time and graph axis
+        data['x_' + category] = np.swapaxes(data['x_' + category], 1, 2)
+        data['y_' + category] = np.swapaxes(data['y_' + category], 1, 2)  # swap time and graph axis
 
     train_dataset = TensorDataset(torch.FloatTensor(data['x_train']),
                                   torch.FloatTensor(data['y_train']))
