@@ -265,8 +265,8 @@ class DCRNNSupervisor:
         :returns x shape (seq_len, batch_size, num_sensor, input_dim)
                  y shape (horizon, batch_size, num_sensor, input_dim)
         """
-        # x = torch.from_numpy(x).float()
-        # y = torch.from_numpy(y).float()
+        x = x.float()
+        y = y.float()
         self._logger.info("X: {}".format(x.size()))
         self._logger.info("y: {}".format(y.size()))
         x = x.permute(1, 0, 2, 3)
