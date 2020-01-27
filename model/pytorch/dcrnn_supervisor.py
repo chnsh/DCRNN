@@ -103,9 +103,9 @@ class DCRNNSupervisor:
         with torch.no_grad():
             self.dcrnn_model = self.dcrnn_model.eval()
 
-            val_iterator = self._data['val_loader'].get_iterator()
+            val_iterator = self._data['val_loader']
 
-            for _, (x, y) in enumerate(val_iterator):
+            for x, y in val_iterator:
                 x, y = self._prepare_data(x, y)
                 output = self.dcrnn_model(x)
                 break
@@ -122,13 +122,13 @@ class DCRNNSupervisor:
         with torch.no_grad():
             self.dcrnn_model = self.dcrnn_model.eval()
 
-            val_iterator = self._data['{}_loader'.format(dataset)].get_iterator()
+            val_iterator = self._data['{}_loader'.format(dataset)]
             losses = []
 
             y_truths = []
             y_preds = []
 
-            for _, (x, y) in enumerate(val_iterator):
+            for x, y in val_iterator:
                 x, y = self._prepare_data(x, y)
 
                 output = self.dcrnn_model(x)
@@ -169,21 +169,21 @@ class DCRNNSupervisor:
         self._logger.info('Start training ...')
 
         # this will fail if model is loaded with a changed batch_size
-        num_batches = self._data['train_loader'].num_batch
-        self._logger.info("num_batches:{}".format(num_batches))
+        # num_batches = self._data['train_loader'].num_batch
+        # self._logger.info("num_batches:{}".format(num_batches))
 
-        batches_seen = num_batches * self._epoch_num
+        batches_seen = 0
 
         for epoch_num in range(self._epoch_num, epochs):
 
             self.dcrnn_model = self.dcrnn_model.train()
 
-            train_iterator = self._data['train_loader'].get_iterator()
+            train_iterator = self._data['train_loader']
             losses = []
 
             start_time = time.time()
 
-            for _, (x, y) in enumerate(train_iterator):
+            for x, y in train_iterator:
                 optimizer.zero_grad()
 
                 x, y = self._prepare_data(x, y)
