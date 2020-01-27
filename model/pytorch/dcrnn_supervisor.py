@@ -3,6 +3,7 @@ import time
 
 import numpy as np
 import torch
+import wandb
 from torch.utils.tensorboard import SummaryWriter
 
 from lib import utils
@@ -44,6 +45,8 @@ class DCRNNSupervisor:
         dcrnn_model = DCRNNModel(adj_mx, self._logger, **self._model_kwargs)
         self.dcrnn_model = dcrnn_model.to(device)
         self._logger.info("Model created")
+
+        wandb.init(name='dcrnn')
 
         self._epoch_num = self._train_kwargs.get('epoch', 0)
         if self._epoch_num > 0:
@@ -90,7 +93,8 @@ class DCRNNSupervisor:
 
     def load_model(self):
         self._setup_graph()
-        assert os.path.exists('models/epo%d.tar' % self._epoch_num), 'Weights at epoch %d not found' % self._epoch_num
+        assert os.path.exists(
+            'models/epo%d.tar' % self._epoch_num), 'Weights at epoch %d not found' % self._epoch_num
         checkpoint = torch.load('models/epo%d.tar' % self._epoch_num, map_location='cpu')
         self.dcrnn_model.load_state_dict(checkpoint['model_state_dict'])
         self._logger.info("Loaded model at {}".format(self._epoch_num))
@@ -188,7 +192,9 @@ class DCRNNSupervisor:
 
                 if batches_seen == 0:
                     # this is a workaround to accommodate dynamically registered parameters in DCGRUCell
-                    optimizer = torch.optim.Adam(self.dcrnn_model.parameters(), lr=base_lr, eps=epsilon)
+                    optimizer = torch.optim.Adam(self.dcrnn_model.parameters(), lr=base_lr,
+                                                 eps=epsilon)
+                    wandb.watch(self.dcrnn_model)
 
                 loss = self._compute_loss(y, output)
 
@@ -221,6 +227,7 @@ class DCRNNSupervisor:
                                            np.mean(losses), val_loss, lr_scheduler.get_lr()[0],
                                            (end_time - start_time))
                 self._logger.info(message)
+                wandb.log({"train mae": np.mean(losses), 'val mae': val_loss}, step=epoch_num)
 
             if (epoch_num % test_every_n_epochs) == test_every_n_epochs - 1:
                 test_loss, _ = self.evaluate(dataset='test', batches_seen=batches_seen)
@@ -229,6 +236,7 @@ class DCRNNSupervisor:
                                            np.mean(losses), test_loss, lr_scheduler.get_lr()[0],
                                            (end_time - start_time))
                 self._logger.info(message)
+                wandb.log({"train mae": np.mean(losses), 'test mae': test_loss}, step=epoch_num)
 
             if val_loss < min_val_loss:
                 wait = 0
