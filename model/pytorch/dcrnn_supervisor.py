@@ -42,7 +42,7 @@ class DCRNNSupervisor:
 
         # setup model
         dcrnn_model = DCRNNModel(adj_mx, self._logger, **self._model_kwargs)
-        self.dcrnn_model = dcrnn_model.cuda() if torch.cuda.is_available() else dcrnn_model
+        self.dcrnn_model = dcrnn_model.to(device)
         self._logger.info("Model created")
 
         self._epoch_num = self._train_kwargs.get('epoch', 0)
