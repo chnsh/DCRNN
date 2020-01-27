@@ -46,7 +46,7 @@ class DCRNNSupervisor:
         self.dcrnn_model = dcrnn_model.to(device)
         self._logger.info("Model created")
 
-        wandb.init(project='epigcn',name='dcrnn')
+        wandb.init(project='epigcn', name='dcrnn')
 
         self._epoch_num = self._train_kwargs.get('epoch', 0)
         if self._epoch_num > 0:
@@ -282,8 +282,8 @@ class DCRNNSupervisor:
         """
         batch_size = x.size(1)
         x = x.view(self.seq_len, batch_size, self.num_nodes * self.input_dim)
-        y = y[..., :self.output_dim].view(self.horizon, batch_size,
-                                          self.num_nodes * self.output_dim)
+        y = y.view(self.horizon, batch_size,
+                   self.num_nodes * self.output_dim)
         return x, y
 
     def _compute_loss(self, y_true, y_predicted):
