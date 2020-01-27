@@ -30,7 +30,7 @@ class DCRNNSupervisor:
 
         # data set
         self._data = utils.load_dataset(**self._data_kwargs)
-        self.standard_scaler = self._data['scaler']
+        # self.standard_scaler = self._data['scaler']
 
         self.num_nodes = int(self._model_kwargs.get('num_nodes', 1))
         self.input_dim = int(self._model_kwargs.get('input_dim', 1))
@@ -144,8 +144,8 @@ class DCRNNSupervisor:
             y_truths_scaled = []
             y_preds_scaled = []
             for t in range(y_preds.shape[0]):
-                y_truth = self.standard_scaler.inverse_transform(y_truths[t])
-                y_pred = self.standard_scaler.inverse_transform(y_preds[t])
+                y_truth = y_truths[t]
+                y_pred = y_preds[t]
                 y_truths_scaled.append(y_truth)
                 y_preds_scaled.append(y_pred)
 
@@ -279,6 +279,6 @@ class DCRNNSupervisor:
         return x, y
 
     def _compute_loss(self, y_true, y_predicted):
-        y_true = self.standard_scaler.inverse_transform(y_true)
-        y_predicted = self.standard_scaler.inverse_transform(y_predicted)
+        # y_true = y_true
+        # y_predicted = y_predicted
         return masked_mae_loss(y_predicted, y_true)

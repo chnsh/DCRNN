@@ -5,7 +5,7 @@ from __future__ import print_function
 import argparse
 import yaml
 
-from lib.utils import load_graph_data
+from lib.utils import load_epidemic_graph
 from model.pytorch.dcrnn_supervisor import DCRNNSupervisor
 
 
@@ -14,7 +14,7 @@ def main(args):
         supervisor_config = yaml.load(f)
 
         graph_pkl_filename = supervisor_config['data'].get('graph_pkl_filename')
-        sensor_ids, sensor_id_to_ind, adj_mx = load_graph_data(graph_pkl_filename)
+        adj_mx = load_epidemic_graph(graph_pkl_filename)
 
         supervisor = DCRNNSupervisor(adj_mx=adj_mx, **supervisor_config)
 

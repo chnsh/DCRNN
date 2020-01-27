@@ -1,11 +1,12 @@
 import logging
-import numpy as np
 import os
 import pickle
-import scipy.sparse as sp
 import sys
-import tensorflow as tf
 
+import h5py
+import numpy as np
+import scipy.sparse as sp
+import tensorflow as tf
 from scipy.sparse import linalg
 
 
@@ -94,7 +95,8 @@ def calculate_normalized_laplacian(adj):
     d_inv_sqrt = np.power(d, -0.5).flatten()
     d_inv_sqrt[np.isinf(d_inv_sqrt)] = 0.
     d_mat_inv_sqrt = sp.diags(d_inv_sqrt)
-    normalized_laplacian = sp.eye(adj.shape[0]) - adj.dot(d_mat_inv_sqrt).transpose().dot(d_mat_inv_sqrt).tocoo()
+    normalized_laplacian = sp.eye(adj.shape[0]) - adj.dot(d_mat_inv_sqrt).transpose().dot(
+        d_mat_inv_sqrt).tocoo()
     return normalized_laplacian
 
 
@@ -178,25 +180,28 @@ def get_total_trainable_parameter_size():
 def load_dataset(dataset_dir, batch_size, test_batch_size=None, **kwargs):
     data = {}
     for category in ['train', 'val', 'test']:
-        cat_data = np.load(os.path.join(dataset_dir, category + '.npz'))
-        data['x_' + category] = cat_data['x']
-        data['y_' + category] = cat_data['y']
-    scaler = StandardScaler(mean=data['x_train'][..., 0].mean(), std=data['x_train'][..., 0].std())
+        with h5py.File(os.path.join(dataset_dir, category + '.hdf5'), 'r') as f:
+            data['x_' + category] = f['x'][:]
+            data['y_' + category] = f['y'][:]
+    # scaler = StandardScaler(mean=data['x_train'][..., 0].mean(), std=data['x_train'][..., 0].std())
     # Data format
     for category in ['train', 'val', 'test']:
-        data['x_' + category][..., 0] = scaler.transform(data['x_' + category][..., 0])
-        data['y_' + category][..., 0] = scaler.transform(data['y_' + category][..., 0])
+        data['x_' + category] = np.swapaxes(data['x_' + category], 0, 1)
+        data['y_' + category] = np.swapaxes(data['y_' + category], 0, 1)  # swap time and graph axis
     data['train_loader'] = DataLoader(data['x_train'], data['y_train'], batch_size, shuffle=True)
     data['val_loader'] = DataLoader(data['x_val'], data['y_val'], test_batch_size, shuffle=False)
     data['test_loader'] = DataLoader(data['x_test'], data['y_test'], test_batch_size, shuffle=False)
-    data['scaler'] = scaler
-
+    # data['scaler'] = scaler
     return data
 
 
 def load_graph_data(pkl_filename):
     sensor_ids, sensor_id_to_ind, adj_mx = load_pickle(pkl_filename)
     return sensor_ids, sensor_id_to_ind, adj_mx
+
+
+def load_epidemic_graph(filename):
+    return np.load(filename)
 
 
 def load_pickle(pickle_file):
