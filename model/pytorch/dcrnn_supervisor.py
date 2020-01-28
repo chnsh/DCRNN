@@ -157,7 +157,7 @@ class DCRNNSupervisor:
 
     def _train(self, base_lr,
                steps, patience=50, epochs=100, lr_decay_ratio=0.1, log_every=1, save_model=1,
-               test_every_n_epochs=10, epsilon=1e-8, **kwargs):
+               test_every_n_epochs=10, epsilon=1e-8, log_every_iteration=10, **kwargs):
         # steps is used in learning rate - will see if need to use it?
         min_val_loss = float('inf')
         wait = 0
@@ -203,6 +203,12 @@ class DCRNNSupervisor:
                 losses.append(loss.item())
 
                 batches_seen += 1
+
+                message = "Batches seen: {}, loss: {:.4f}".format(batches_seen, loss.item())
+                if batches_seen % log_every_iteration == 0:
+                    self._logger.info(message)
+
+                wandb.log({'train loss': loss.item()}, step=batches_seen)
                 loss.backward()
 
                 # gradient clipping - this does it in place
