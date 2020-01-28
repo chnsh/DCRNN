@@ -2,10 +2,10 @@
 base_dir: data/model
 log_level: INFO
 data:
-  batch_size: 256
+  batch_size: 128
   dataset_dir: data/epigcn
-  test_batch_size: 256
-  val_batch_size: 256
+  test_batch_size: 128
+  val_batch_size: 128
   graph_pkl_filename: data/sensor_graph/adj_mx.npy
 
 model:
