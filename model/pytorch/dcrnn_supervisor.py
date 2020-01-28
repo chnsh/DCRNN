@@ -267,8 +267,8 @@ class DCRNNSupervisor:
         """
         x = x.float()
         y = y.float()
-        self._logger.info("X: {}".format(x.size()))
-        self._logger.info("y: {}".format(y.size()))
+        self._logger.debug("X: {}".format(x.size()))
+        self._logger.debug("y: {}".format(y.size()))
         x = x.permute(1, 0, 2, 3)
         y = y.permute(1, 0, 2, 3)
         return x, y
