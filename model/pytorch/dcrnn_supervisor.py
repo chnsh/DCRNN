@@ -43,6 +43,11 @@ class DCRNNSupervisor:
 
         # setup model
         dcrnn_model = DCRNNModel(adj_mx, self._logger, **self._model_kwargs)
+
+        if torch.cuda.device_count() > 1:
+            self._logger.info("Let's use", torch.cuda.device_count(), "GPUs!")
+            dcrnn_model = torch.nn.DataParallel(dcrnn_model)
+
         self.dcrnn_model = dcrnn_model.to(device)
         self._logger.info("Model created")
 
@@ -163,8 +168,12 @@ class DCRNNSupervisor:
         wait = 0
         optimizer = torch.optim.Adam(self.dcrnn_model.parameters(), lr=base_lr, eps=epsilon)
 
-        lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=steps,
-                                                            gamma=lr_decay_ratio)
+        # lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=steps,
+        #                                                     gamma=lr_decay_ratio)
+
+        lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, patience=3, factor=0.5
+        )
 
         self._logger.info('Start training ...')
 
@@ -191,6 +200,7 @@ class DCRNNSupervisor:
                 output = self.dcrnn_model(x, y, batches_seen)
 
                 if batches_seen == 0:
+                    self.dcrnn_model = torch.nn.DataParallel(self.dcrnn_model)
                     # this is a workaround to accommodate dynamically registered parameters in DCGRUCell
                     optimizer = torch.optim.Adam(self.dcrnn_model.parameters(), lr=base_lr,
                                                  eps=epsilon)
@@ -219,7 +229,7 @@ class DCRNNSupervisor:
 
                 optimizer.step()
             self._logger.info("epoch complete")
-            lr_scheduler.step()
+            # lr_scheduler.step()
             self._logger.info("evaluating now!")
 
             val_loss, _ = self.evaluate(dataset='val', batches_seen=batches_seen)
@@ -233,16 +243,17 @@ class DCRNNSupervisor:
             if (epoch_num % log_every) == log_every - 1:
                 message = 'Epoch [{}/{}] ({}) train_mae: {:.4f}, val_mae: {:.4f}, lr: {:.6f}, ' \
                           '{:.1f}s'.format(epoch_num, epochs, batches_seen,
-                                           np.mean(losses), val_loss, lr_scheduler.get_lr()[0],
+                                           np.mean(losses), val_loss, 0.0,
                                            (end_time - start_time))
                 self._logger.info(message)
+                lr_scheduler.step(val_loss)
                 wandb.log({"train mae": np.mean(losses), 'val mae': val_loss})
 
             if (epoch_num % test_every_n_epochs) == test_every_n_epochs - 1:
                 test_loss, _ = self.evaluate(dataset='test', batches_seen=batches_seen)
                 message = 'Epoch [{}/{}] ({}) train_mae: {:.4f}, test_mae: {:.4f},  lr: {:.6f}, ' \
                           '{:.1f}s'.format(epoch_num, epochs, batches_seen,
-                                           np.mean(losses), test_loss, lr_scheduler.get_lr()[0],
+                                           np.mean(losses), test_loss, 0.0,
                                            (end_time - start_time))
                 self._logger.info(message)
                 wandb.log({"train mae": np.mean(losses), 'test mae': test_loss})
