@@ -44,9 +44,9 @@ class DCRNNSupervisor:
         # setup model
         dcrnn_model = DCRNNModel(adj_mx, self._logger, **self._model_kwargs)
 
-        if torch.cuda.device_count() > 1:
-            self._logger.info("Let's use", torch.cuda.device_count(), "GPUs!")
-            dcrnn_model = torch.nn.DataParallel(dcrnn_model)
+        # if torch.cuda.device_count() > 1:
+        #     self._logger.info("Let's use", torch.cuda.device_count(), "GPUs!")
+        #     dcrnn_model = torch.nn.DataParallel(dcrnn_model)
 
         self.dcrnn_model = dcrnn_model.to(device)
         self._logger.info("Model created")
@@ -200,7 +200,7 @@ class DCRNNSupervisor:
                 output = self.dcrnn_model(x, y, batches_seen)
 
                 if batches_seen == 0:
-                    self.dcrnn_model = torch.nn.DataParallel(self.dcrnn_model)
+                    # self.dcrnn_model = torch.nn.DataParallel(self.dcrnn_model)
                     # this is a workaround to accommodate dynamically registered parameters in DCGRUCell
                     optimizer = torch.optim.Adam(self.dcrnn_model.parameters(), lr=base_lr,
                                                  eps=epsilon)
