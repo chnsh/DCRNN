@@ -194,7 +194,8 @@ class DCRNNSupervisor:
                     # this is a workaround to accommodate dynamically registered parameters in DCGRUCell
                     optimizer = torch.optim.Adam(self.dcrnn_model.parameters(), lr=base_lr,
                                                  eps=epsilon)
-                    wandb.watch(self.dcrnn_model)
+                    if epoch_num == 0:
+                        wandb.watch(self.dcrnn_model)
 
                 loss = self._compute_loss(y, output)
 
@@ -204,11 +205,13 @@ class DCRNNSupervisor:
 
                 batches_seen += 1
 
-                message = "Batches seen: {}, loss: {:.4f}".format(batches_seen, loss.item())
-                if batches_seen % log_every_iteration == 0:
-                    self._logger.info(message)
+                message = "Epoch: [{},{}] Batches seen: {}, loss: {:.4f}".format(epoch_num, epochs,
+                                                                                 batches_seen,
+                                                                                 loss.item())
+                # if batches_seen % log_every_iteration == 0:
+                #     self._logger.info(message)
 
-                wandb.log({'train loss': loss.item()}, step=batches_seen)
+                wandb.log({'train loss': loss.item(), 'epochs': epoch_num}, step=batches_seen)
                 loss.backward()
 
                 # gradient clipping - this does it in place
@@ -233,7 +236,7 @@ class DCRNNSupervisor:
                                            np.mean(losses), val_loss, lr_scheduler.get_lr()[0],
                                            (end_time - start_time))
                 self._logger.info(message)
-                wandb.log({"train mae": np.mean(losses), 'val mae': val_loss}, step=epoch_num)
+                wandb.log({"train mae": np.mean(losses), 'val mae': val_loss})
 
             if (epoch_num % test_every_n_epochs) == test_every_n_epochs - 1:
                 test_loss, _ = self.evaluate(dataset='test', batches_seen=batches_seen)
@@ -242,7 +245,7 @@ class DCRNNSupervisor:
                                            np.mean(losses), test_loss, lr_scheduler.get_lr()[0],
                                            (end_time - start_time))
                 self._logger.info(message)
-                wandb.log({"train mae": np.mean(losses), 'test mae': test_loss}, step=epoch_num)
+                wandb.log({"train mae": np.mean(losses), 'test mae': test_loss})
 
             if val_loss < min_val_loss:
                 wait = 0
