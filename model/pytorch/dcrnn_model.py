@@ -116,7 +116,7 @@ class DCRNNModel(nn.Module, Seq2SeqAttrs):
         """
         encoder_hidden_state = None
         for t in range(self.encoder_model.seq_len):
-            _, encoder_hidden_state = self.encoder_model(inputs[:,t], encoder_hidden_state)
+            _, encoder_hidden_state = self.encoder_model(inputs[t], encoder_hidden_state)
 
         return encoder_hidden_state
 
@@ -151,7 +151,7 @@ class DCRNNModel(nn.Module, Seq2SeqAttrs):
     def forward(self, inputs, labels=None, batches_seen=None):
         """
         seq2seq forward pass
-        :param inputs: shape (batch_size, seq_len, num_sensor * input_dim)
+        :param inputs: shape (seq_len, batch_size, num_sensor * input_dim)
         :param labels: shape (horizon, batch_size, num_sensor * output)
         :param batches_seen: batches seen till now
         :return: output: (self.horizon, batch_size, self.num_nodes * self.output_dim)
