@@ -289,8 +289,8 @@ class DCRNNSupervisor:
         y = y.float()
         self._logger.debug("X: {}".format(x.size()))
         self._logger.debug("y: {}".format(y.size()))
-        x = x.permute(1, 0, 2, 3)
-        y = y.permute(1, 0, 2, 3)
+        # x = x.permute(1, 0, 2, 3)
+        # y = y.permute(1, 0, 2, 3)
         return x, y
 
     def _get_x_y_in_correct_dims(self, x, y):
@@ -300,9 +300,9 @@ class DCRNNSupervisor:
         :return: x: shape (seq_len, batch_size, num_sensor * input_dim)
                  y: shape (horizon, batch_size, num_sensor * output_dim)
         """
-        batch_size = x.size(1)
-        x = x.view(self.seq_len, batch_size, self.num_nodes * self.input_dim)
-        y = y.view(self.horizon, batch_size,
+        batch_size = x.size(0)
+        x = x.view(batch_size, self.seq_len, self.num_nodes * self.input_dim)
+        y = y.view(batch_size, self.horizon,
                    self.num_nodes * self.output_dim)
         return x, y
 
